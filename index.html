@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Limber</title>
+<meta name="description" content="Daily stretching and mobility for runners and cyclists, with guided spoken sessions and a log.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Limber">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF2F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1518" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one phone-width column (max 560px), sticky header, bottom tabs. A session opens a full-screen player built around one draining ring; bedtime sessions switch the player to a dim night palette. */
+:root {
+  --bg: #EDF2F1;          /* morning mist */
+  --surface: #FFFFFF;
+  --surface-2: #DFE8E7;
+  --ink: #12202A;         /* deep slate */
+  --ink-2: #41525C;
+  --ink-3: #6C7C85;
+  --line: #CED9D9;
+  --accent: #0B7A6E;      /* deep teal */
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D1EBE6;
+  --ready: #B9741A;       /* amber: get into position */
+  --ready-soft: #F6E7C9;
+  --slab: #12262C;
+  --slab-2: #1E3940;
+  --slab-ink: #EEF4F3;
+  --slab-mute: #9FB4B7;
+  --slab-accent: #5FD0BE;
+  --good: #1F7A4A;
+  --good-soft: #D5EEDF;
+  --bad: #B03A32;
+  --heat0: #DFE8E7; --heat1: #A9D9D0; --heat2: #4FAE9F; --heat3: #0B7A6E;
+  --night-bg: #081014; --night-2: #13232A; --night-ink: #C7D5D9; --night-mute: #7E959C; --night-accent: #86B9D6;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1518; --surface: #152126; --surface-2: #1E2D33; --ink: #E3ECEB; --ink-2: #A9BABD; --ink-3: #7E9095;
+    --line: #253940; --accent: #4FC1B0; --accent-ink: #052320; --accent-soft: #123A35;
+    --ready: #E6A84A; --ready-soft: #3A2C14; --slab: #17323A; --slab-2: #23454E;
+    --good: #5CC489; --good-soft: #173529; --bad: #EE8077;
+    --heat0: #1E2D33; --heat1: #1E4A44; --heat2: #2F8577; --heat3: #4FC1B0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1518; --surface: #152126; --surface-2: #1E2D33; --ink: #E3ECEB; --ink-2: #A9BABD; --ink-3: #7E9095;
+  --line: #253940; --accent: #4FC1B0; --accent-ink: #052320; --accent-soft: #123A35;
+  --ready: #E6A84A; --ready-soft: #3A2C14; --slab: #17323A; --slab-2: #23454E;
+  --good: #5CC489; --good-soft: #173529; --bad: #EE8077;
+  --heat0: #1E2D33; --heat1: #1E4A44; --heat2: #2F8577; --heat3: #4FC1B0;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; color-scheme: light; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button, a, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+a { color: var(--accent); }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+#app { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 0 calc(108px + env(safe-area-inset-bottom, 0px)); }
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 12px; background: var(--bg); }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 800; font-size: 1.55rem; letter-spacing: -.02em; line-height: 1; }
+.brand svg { width: 24px; height: 24px; }
+.spacer { flex: 1; }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabs-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
+.tab { background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 4px 10px; font-size: .76rem; font-weight: 700; color: var(--ink-3); }
+.tab svg { width: 22px; height: 22px; }
+.tab[aria-current="page"] { color: var(--accent); }
+
+.eyebrow { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.h-display { font-family: var(--f-display); font-weight: 800; letter-spacing: -.025em; line-height: 1; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-block: 28px 10px; }
+.sec-head h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; letter-spacing: -.01em; }
+.muted { color: var(--ink-3); }
+.small { font-size: .88rem; }
+.hint { font-size: .85rem; color: var(--ink-3); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.block { width: 100%; }
+.btn.sm { min-height: 36px; padding: 0 14px; font-size: .9rem; }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn svg { width: 16px; height: 16px; }
+.link-btn { background: none; border: 0; padding: 4px 0; color: var(--accent); font-weight: 700; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+.stack { display: grid; gap: 12px; }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-size: .9rem; font-weight: 700; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.seg .chip { text-align: center; padding-inline: 4px; }
+.ci { display: grid; gap: 16px; }
+.ci .field-lbl { font-weight: 700; font-size: .9rem; margin-bottom: 8px; }
+.ci h2 { font-family: var(--f-display); font-weight: 800; font-size: 1.55rem; letter-spacing: -.02em; }
+
+.slab { background: var(--slab); color: var(--slab-ink); border-radius: 20px; padding: 20px 18px 18px; }
+.slab .eyebrow { color: var(--slab-mute); }
+.slab h1 { font-size: clamp(2.2rem, 10vw, 3rem); margin-block: 6px 8px; }
+.slab .why { color: var(--slab-mute); font-size: .95rem; }
+.slab .btn { border-color: var(--slab-2); background: var(--slab-2); color: var(--slab-ink); }
+.slab .btn.primary { background: var(--slab-accent); border-color: var(--slab-accent); color: #062420; }
+.st-list { display: grid; margin-block: 14px 16px; border-top: 1px solid var(--slab-2); }
+.st-li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--slab-2); }
+.st-li b { font-weight: 700; }
+.st-li .t { color: var(--slab-mute); font-size: .88rem; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.st-li .a { color: var(--slab-mute); font-size: .82rem; grid-column: 1 / -1; }
+.st-li .tag { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; background: var(--slab-2); color: var(--slab-accent); margin-left: 6px; vertical-align: 2px; }
+
+.banner { display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap; background: var(--accent-soft); border-radius: var(--r); padding: 12px 14px; margin-top: 12px; }
+.banner p { font-weight: 700; }
+.banner.warm { background: var(--ready-soft); }
+
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.wd { display: grid; justify-items: center; gap: 4px; font-size: .74rem; color: var(--ink-3); font-weight: 700; }
+.wd i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--accent-ink); font-style: normal; }
+.wd.on i { background: var(--accent); }
+.wd.today span { color: var(--ink); }
+.wd.today i { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink-3); }
+.wd i svg { width: 16px; height: 16px; }
+.tip { display: flex; gap: 12px; align-items: flex-start; }
+.tip svg { width: 22px; height: 22px; flex: none; color: var(--accent); margin-top: 1px; }
+
+/* library */
+.search { width: 100%; min-height: 46px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); padding: 0 18px; }
+.lib-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.lib-head { display: flex; align-items: stretch; }
+.lib-head > button:first-child { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 14px 6px 14px 16px; display: grid; gap: 4px; }
+.lib-head b { font-size: 1.04rem; }
+.star { background: none; border: 0; width: 52px; display: grid; place-items: center; color: var(--ink-3); }
+.star svg { width: 22px; height: 22px; }
+.star[aria-pressed="true"] { color: var(--ready); }
+.tags { font-size: .84rem; color: var(--ink-3); }
+.lib-body { padding: 0 16px 16px; display: grid; gap: 12px; }
+.cues { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.cues li::marker { font-weight: 700; color: var(--accent); }
+.kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 12px; font-size: .92rem; margin: 0; }
+.kv dt { color: var(--ink-3); font-weight: 700; }
+.kv dd { margin: 0; min-width: 0; }
+
+/* progress */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; }
+.stat b { display: block; font-family: var(--f-display); font-weight: 800; font-size: 2.1rem; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .8rem; color: var(--ink-3); font-weight: 700; }
+.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis { fill: var(--ink-3); font-size: 11px; font-family: var(--f-body); }
+.chart .lbl { fill: var(--ink-2); font-size: 12px; font-family: var(--f-body); font-weight: 700; }
+.chart .val { fill: var(--ink-2); font-size: 11.5px; font-family: var(--f-body); font-variant-numeric: tabular-nums; }
+.chart .bar { fill: var(--accent); }
+.chart .bar0 { fill: var(--surface-2); }
+.chart .stem { stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; }
+.chart .stem.better { stroke: var(--accent); }
+.chart .before { fill: var(--surface); stroke: var(--ink-3); stroke-width: 2; }
+.chart .after { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart .cell { cursor: pointer; }
+.chart .h0 { fill: var(--heat0); } .chart .h1 { fill: var(--heat1); } .chart .h2 { fill: var(--heat2); } .chart .h3 { fill: var(--heat3); }
+.chart .todayc { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.chart .wc { fill: var(--ink-3); font-size: 10px; font-family: var(--f-body); font-weight: 700; }
+.chart .sel { stroke: var(--ink); stroke-width: 2.5; }
+.readout { font-size: .9rem; color: var(--ink-2); min-height: 1.4em; margin-top: 8px; }
+.legend { display: flex; gap: 14px; align-items: center; font-size: .8rem; color: var(--ink-3); margin-top: 8px; flex-wrap: wrap; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; vertical-align: -2px; margin-right: 4px; }
+.legend i.ring { border-radius: 50%; border: 2px solid var(--ink-3); background: var(--surface); }
+.legend i.dot { border-radius: 50%; background: var(--accent); }
+.hist-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.hist-item > button { width: 100%; text-align: left; background: none; border: 0; padding: 14px 16px; display: grid; gap: 6px; }
+.hist-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.badge.good { background: var(--good-soft); color: var(--good); }
+.hist-body { padding: 0 16px 14px; display: grid; gap: 10px; }
+.mini-list { display: grid; gap: 4px; font-size: .9rem; }
+.mini-list div { display: flex; justify-content: space-between; gap: 10px; }
+.mini-list span:last-child { color: var(--ink-3); white-space: nowrap; }
+.empty { text-align: center; padding: 28px 18px; border: 1.5px dashed var(--line); border-radius: var(--r); color: var(--ink-2); display: grid; gap: 10px; justify-items: center; }
+
+/* player */
+.player { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--ink); overflow-y: auto; --p-accent: var(--accent); --p-ready: var(--ready); --p-track: var(--surface-2); --p-mute: var(--ink-3); --p-btn: var(--surface); --p-line: var(--line); }
+.player.night { background: var(--night-bg); color: var(--night-ink); --p-accent: var(--night-accent); --p-ready: #C9A46B; --p-track: var(--night-2); --p-mute: var(--night-mute); --p-btn: var(--night-2); --p-line: #1F333B; color-scheme: dark; }
+.pl-in { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 0 calc(30px + env(safe-area-inset-bottom, 0px)); min-height: 100%; display: flex; flex-direction: column; }
+.pl-top { display: flex; align-items: center; gap: 10px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 10px; }
+.player .icon-btn, .player .btn { background: var(--p-btn); border-color: var(--p-line); color: inherit; }
+.pl-title { flex: 1; min-width: 0; display: grid; }
+.pl-title b { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-title span { font-size: .85rem; color: var(--p-mute); font-variant-numeric: tabular-nums; }
+.pl-prog { display: flex; gap: 4px; margin-bottom: 16px; }
+.pl-prog i { flex: 1; height: 5px; border-radius: 99px; background: var(--p-track); }
+.pl-prog i.d { background: var(--p-accent); }
+.pl-prog i.c { background: currentColor; opacity: .85; }
+.pl-eyebrow { font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--p-mute); }
+.pl-name { font-family: var(--f-display); font-weight: 800; letter-spacing: -.025em; font-size: clamp(2rem, 9vw, 2.8rem); line-height: 1; margin-block: 6px 4px; }
+.ring-wrap { position: relative; width: min(74vw, 300px); aspect-ratio: 1; max-width: 100%; margin: 14px auto 6px; }
+.ring-wrap svg { width: 100%; height: 100%; display: block; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--p-track); stroke-width: 12; }
+.ring-prog { fill: none; stroke: var(--p-accent); stroke-width: 12; stroke-linecap: round; }
+.ring-wrap.ready .ring-prog { stroke: var(--p-ready); }
+.ring-breath { fill: var(--p-accent); opacity: .12; transform-origin: 120px 120px; transform: scale(.7); }
+.ring-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 2px; }
+.ring-num { font-family: var(--f-display); font-weight: 800; font-size: clamp(3.6rem, 19vw, 5rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.ring-lbl { font-weight: 700; font-size: 1rem; }
+.ring-wrap.ready .ring-lbl { color: var(--p-ready); }
+.ring-sub { font-size: .85rem; color: var(--p-mute); min-height: 1.2em; }
+.pl-cue { text-align: center; font-size: 1.05rem; max-width: 34ch; margin: 6px auto 0; min-height: 2.9em; }
+.pl-more { text-align: center; margin-top: 4px; }
+.pl-more .link-btn { color: var(--p-accent); }
+.player .kv dt { color: var(--p-mute); }
+.player .cues li::marker { color: var(--p-accent); }
+.pl-next { text-align: center; color: var(--p-mute); font-size: .9rem; margin-top: 10px; }
+.pl-controls { margin-top: auto; padding-top: 18px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.pl-controls .side { display: flex; gap: 8px; }
+.pl-controls .side.r { justify-content: flex-end; }
+.big-play { width: 76px; height: 76px; border-radius: 50%; border: 0; background: var(--p-accent); color: var(--bg); display: grid; place-items: center; }
+.player.night .big-play { color: var(--night-bg); }
+.big-play svg { width: 30px; height: 30px; }
+.round { width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--p-line); background: var(--p-btn); display: grid; place-items: center; color: inherit; font-weight: 700; font-size: .85rem; }
+.round svg { width: 22px; height: 22px; }
+
+/* sheet */
+.sheet { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-bg { position: absolute; inset: 0; background: rgba(6, 14, 18, .55); }
+.sheet-panel { position: relative; width: 100%; max-width: 560px; max-height: 90%; overflow-y: auto; background: var(--bg); color: var(--ink); border-radius: 22px 22px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.sheet-grab { width: 40px; height: 5px; border-radius: 99px; background: var(--line); margin: 4px auto 12px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.sheet-head h2 { font-family: var(--f-display); font-weight: 800; font-size: 1.9rem; letter-spacing: -.02em; line-height: 1.02; }
+.field { display: grid; gap: 8px; margin-bottom: 18px; }
+.field > label, .field > .lbl { font-weight: 700; font-size: .92rem; }
+.input { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 0 12px; width: 100%; }
+textarea.input { min-height: 80px; padding: 10px 12px; resize: vertical; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 90; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: .9rem; max-width: calc(100% - 32px); text-align: center; }
+.update-bar { position: fixed; z-index: 40; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); max-width: 528px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--ink); color: var(--bg); border-radius: var(--r); padding: 10px 10px 10px 16px; font-weight: 700; font-size: .92rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-panel { animation: rise .22s ease-out; }
+  @keyframes rise { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .ring-prog { transition: stroke-dashoffset .2s linear; }
+  .breathing .ring-breath { animation: breathe 10s ease-in-out infinite; }
+  @keyframes breathe { 0% { transform: scale(.62); } 40% { transform: scale(.94); } 100% { transform: scale(.62); } }
+}
+@media (max-width: 360px) { .stat b { font-size: 1.8rem; } .seg .chip { font-size: .82rem; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-opacity=".22" stroke-width="3.2"/><path d="M12 3.5A8.5 8.5 0 1 1 4.4 15.8" fill="none" style="stroke:var(--accent)" stroke-width="3.2" stroke-linecap="round"/><circle cx="4.4" cy="15.8" r="2.6" fill="currentColor"/></svg>Limber</div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-act="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <main id="view"></main>
+</div>
+<nav class="tabs" aria-label="Sections"><div class="tabs-in">
+  <button class="tab" data-act="tab" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 4a8 8 0 1 1-7.2 11.5"/><circle cx="4.8" cy="15.5" r="1.6" fill="currentColor"/></svg>Today</button>
+  <button class="tab" data-act="tab" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="14.5" cy="4.5" r="2"/><path d="M14 8l-4 5 4 3v5M10 13l-4 2M14 16l4-1M13 9l4 2"/></svg>Stretches</button>
+  <button class="tab" data-act="tab" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M7.5 15l4-4.5 3 3 5-6"/></svg>Progress</button>
+</div></nav>
+
+<div class="player" id="player" hidden></div>
+<div class="sheet" id="sheet" hidden><div class="sheet-bg" data-act="sheet-close"></div><div class="sheet-panel" id="sheet-panel" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+<div class="update-bar" id="update-bar" hidden><span>A new version of Limber is ready.</span><button class="btn sm primary" data-act="update-app">Update</button></div>
+<input type="file" id="restore-file" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ---------------- helpers ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const today = () => ymd(new Date());
+const daysBetween = (a, b) => Math.round((parseYmd(b) - parseYmd(a)) / 86400000);
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const mondayOf = s => { const d = parseYmd(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); };
+const fmtDay = s => parseYmd(s).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const fmtShort = s => parseYmd(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const mmss = ms => { const t = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(t / 60)}:${pad(t % 60)}`; };
+const uid = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const listTxt = a => a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const ICON = {
+  play: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>`,
+  pause: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor"/></svg>`,
+  back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M14 12L5 5v14z" transform="scale(-1,1) translate(-24,0)"/></svg>`,
+  skip: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M14 12L5 5v14z"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>`,
+  starOn: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="currentColor"/></svg>`,
+  leaf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.2 11.5"/><circle cx="4.8" cy="15.5" r="1.6" fill="currentColor"/></svg>`
+};
+
+/* ---------------- stretch library ---------------- */
+const AREAS = { hipflex: 'Hip flexors', hips: 'Hips & glutes', ham: 'Hamstrings', calf: 'Calves & Achilles', quad: 'Quads & IT band', back: 'Lower back', upper: 'Upper back & neck' };
+const KIND = { static: 'Hold', dynamic: 'Moving', roller: 'Foam roller', breath: 'Breathing' };
+// pos orders a session so you rarely get up and down: roller, standing, kneeling, seated, lying.
+const ST = {
+  leg_swing_fb: { name: 'Front-to-Back Leg Swings', areas: ['ham', 'hipflex'], kind: 'dynamic', sides: true, secs: 20, pos: 'stand',
+    cues: ['Stand side-on to a wall and hold it for balance.', 'Swing the outside leg forward and back, loose like a pendulum.', 'Start small and let the swings grow. Keep your torso tall.'],
+    feel: 'Hamstrings and the front of the hip', caution: 'Stay controlled. No kicking to your limit.', easier: 'Smaller swings.', harder: 'Swing a little higher each round.' },
+  leg_swing_ss: { name: 'Side-to-Side Leg Swings', areas: ['hips'], kind: 'dynamic', sides: true, secs: 20, pos: 'stand',
+    cues: ['Face a wall with both hands on it.', 'Swing one leg across your body and back out to the side.', 'Keep your hips square and the swing relaxed.'],
+    feel: 'Inner and outer hips', caution: 'Keep your standing knee soft.', easier: 'Smaller swings.', harder: 'Bigger, slower swings.' },
+  calf_wall: { name: 'Wall Calf Stretch', areas: ['calf'], kind: 'static', sides: true, pos: 'stand',
+    cues: ['Hands on a wall, one foot back with the knee straight.', 'Press the back heel down with your toes pointing forward.', 'Lean your hips toward the wall until you feel the calf.'],
+    feel: 'The upper calf', caution: 'Ease in. No bouncing.', easier: 'Shorter stance.', harder: 'Longer stance.' },
+  soleus_wall: { name: 'Bent-Knee Calf Stretch', areas: ['calf'], kind: 'static', sides: true, pos: 'stand',
+    cues: ['Same stance as the wall calf stretch, back foot a little closer.', 'Bend the back knee while keeping that heel down.', 'Feel it low in the calf, near the Achilles.'],
+    feel: 'The lower calf and Achilles', caution: 'The Achilles dislikes sudden stretching. Go gently.', easier: 'Less knee bend.', harder: 'Sink the knee lower.' },
+  standing_quad: { name: 'Standing Quad Stretch', areas: ['quad', 'hipflex'], kind: 'static', sides: true, pos: 'stand',
+    cues: ['Hold a wall, bend one knee and take that ankle behind you.', 'Keep your knees side by side.', 'Tuck your tailbone under to feel it up into the hip.'],
+    feel: 'The front of the thigh', caution: 'Hold the ankle, not the toes, if your knee complains.', easier: 'Loop a towel around the ankle.', harder: 'Couch Stretch.' },
+  ragdoll: { name: 'Ragdoll Fold', areas: ['ham', 'back'], kind: 'static', sides: false, pos: 'stand', grp: 'hamfold',
+    cues: ['Feet hip-width apart, knees softly bent.', 'Fold forward and hold opposite elbows.', 'Let your head hang and sway gently side to side.'],
+    feel: 'Hamstrings and low back', caution: 'Roll up slowly when you stand.', easier: 'Bend your knees more.', harder: 'Straighten your knees a little.' },
+  doorway_chest: { name: 'Doorway Chest Stretch', areas: ['upper'], kind: 'static', sides: false, secs: 40, pos: 'stand',
+    cues: ['Forearms on either side of a doorframe, elbows at shoulder height.', 'Step one foot through and lean gently forward.', 'Keep your chin tucked and your ribs down.'],
+    feel: 'Chest and the front of the shoulders, tight from the riding position', caution: 'Ease off if your arms tingle.', easier: 'Smaller step.', harder: 'Raise your elbows slightly.' },
+  hk_hipflexor: { name: 'Half-Kneeling Hip Flexor Stretch', areas: ['hipflex', 'quad'], kind: 'static', sides: true, pos: 'kneel', grp: 'hipflex',
+    cues: ['Kneel on one knee on a pad, front foot flat ahead of you.', 'Tuck your tailbone and squeeze the glute of the kneeling leg.', 'Shift your hips forward slightly. Reach that same arm overhead for more.'],
+    feel: 'The front of the hip on the kneeling side', caution: 'Don’t arch your low back to go further.', easier: 'Smaller shift forward.', harder: 'Couch Stretch.' },
+  couch: { name: 'Couch Stretch', areas: ['quad', 'hipflex'], kind: 'static', sides: true, pos: 'kneel', grp: 'hipflex', noBed: true,
+    cues: ['Back knee near a wall or couch, with that shin running up it.', 'Front foot forward in a lunge, hands on the front knee.', 'Tuck your pelvis and lift your chest only as far as you can breathe calmly.'],
+    feel: 'Deep in the quads and hip flexors', caution: 'Pad the knee. Back off if the knee itself hurts.', easier: 'Half-Kneeling Hip Flexor Stretch.', harder: 'Torso fully upright.' },
+  lizard: { name: 'Lizard Lunge', areas: ['hips', 'hipflex'], kind: 'static', sides: true, pos: 'kneel',
+    cues: ['From a lunge, place both hands inside your front foot.', 'Rest the back knee down and let your hips sink.', 'Let the front knee open out a little to open the hip.'],
+    feel: 'Hip, groin and hip flexor', caution: 'Keep your front knee over the ankle.', easier: 'Hands on books or a block.', harder: 'Lower to your forearms.' },
+  lunge_twist: { name: 'Low Lunge Twist', areas: ['hipflex', 'upper'], kind: 'static', sides: true, secs: 35, pos: 'kneel',
+    cues: ['Low lunge with the back knee down.', 'Opposite hand on the floor inside your front foot.', 'Rotate your chest toward the front leg and reach the other arm up.'],
+    feel: 'Hip flexor plus upper back rotation', caution: 'Turn from your upper back, not your low back.', easier: 'Hand on the front knee.', harder: 'Back knee lifted.' },
+  pigeon: { name: 'Pigeon Pose', areas: ['hips'], kind: 'static', sides: true, pos: 'kneel', grp: 'glute4', noBed: true,
+    cues: ['From hands and knees, bring one knee forward behind your wrist.', 'Slide the other leg straight back and square your hips.', 'Stay up on your hands or fold forward over the front leg.'],
+    feel: 'The outer hip and glute of the front leg', caution: 'If the front knee hurts, use the Figure-4 Stretch instead.', easier: 'Figure-4 Stretch on your back.', harder: 'Fold onto your forearms.' },
+  frog: { name: 'Frog Stretch', areas: ['hips'], kind: 'static', sides: false, pos: 'kneel',
+    cues: ['On hands and knees, slide your knees wide apart.', 'Keep your ankles in line with your knees, feet turned out.', 'Rock your hips back slowly until you feel your inner thighs.'],
+    feel: 'Inner thighs and groin', caution: 'Pad your knees and go gently.', easier: 'Knees less wide.', harder: 'Lower to your forearms.' },
+  child: { name: 'Child’s Pose', areas: ['back', 'hips'], kind: 'static', sides: false, pos: 'kneel', bed: true,
+    cues: ['Kneel with big toes together and knees apart.', 'Sit your hips back toward your heels.', 'Reach your arms forward and rest your forehead down.'],
+    feel: 'Low back and hips', caution: 'Put a pillow under your hips if your knees complain.', easier: 'Pillow under your hips.', harder: 'Walk your hands to one side for a side stretch.' },
+  cat_cow: { name: 'Cat-Cow', areas: ['back', 'upper'], kind: 'dynamic', sides: false, secs: 40, pos: 'kneel', bed: true,
+    cues: ['Hands under shoulders, knees under hips.', 'Breathe in: drop your belly and lift your chest.', 'Breathe out: round your back up toward the ceiling.'],
+    feel: 'The whole spine', caution: 'Move slowly with your breath.', easier: 'Smaller range.', harder: 'Move one segment at a time.' },
+  thread_needle: { name: 'Thread the Needle', areas: ['upper'], kind: 'static', sides: true, secs: 30, pos: 'kneel', bed: true,
+    cues: ['From hands and knees, slide one arm under your body, palm up.', 'Rest that shoulder and the side of your head on the floor.', 'Breathe into the space between your shoulder blades.'],
+    feel: 'Upper back and the back of the shoulder, tight from the handlebars', caution: 'Keep your hips over your knees.', easier: 'Don’t slide as far.', harder: 'Reach the top arm overhead.' },
+  dog_pedal: { name: 'Downward Dog Calf Pedal', areas: ['calf', 'ham'], kind: 'dynamic', sides: false, secs: 40, pos: 'kneel',
+    cues: ['From hands and knees, lift your hips into an upside-down V.', 'Bend one knee while pressing the other heel toward the floor.', 'Alternate slowly, like pedaling in place.'],
+    feel: 'Calves and hamstrings', caution: 'Keep a soft bend in both knees if your hamstrings are tight.', easier: 'Bend both knees more.', harder: 'Hold each heel down for two breaths.' },
+  wgs: { name: 'World’s Greatest Stretch', areas: ['hipflex', 'ham', 'upper'], kind: 'dynamic', sides: true, secs: 30, pos: 'kneel',
+    cues: ['Step into a long lunge, back knee down or up.', 'Inside hand down, front elbow toward your instep.', 'Rotate and reach the front arm to the ceiling, then repeat.'],
+    feel: 'Hip flexors, hamstrings and upper back', caution: 'Move slowly between positions.', easier: 'Back knee on the floor.', harder: 'Hold each position for two breaths.' },
+  hip_9090: { name: '90/90 Hip Switches', areas: ['hips'], kind: 'dynamic', sides: false, secs: 40, pos: 'seat',
+    cues: ['Sit with both knees bent at 90 degrees, one in front and one to the side.', 'Rotate both knees over to the other side.', 'Sit tall and move slowly with your breath.'],
+    feel: 'Hip rotation in both directions', caution: 'Lean back on your hands if you need to.', easier: 'Hands behind you for support.', harder: 'Hands off the floor.' },
+  seated_fold: { name: 'Seated Hamstring Fold', areas: ['ham', 'back'], kind: 'static', sides: false, pos: 'seat', grp: 'hamfold', bed: true, strap: true,
+    cues: ['Sit with your legs straight and a strap or towel around your feet.', 'Hinge forward from the hips with a long spine.', 'Stop when you feel the hamstrings. Don’t pull yourself down.'],
+    feel: 'Hamstrings and calves', caution: 'Keep your back long rather than rounding to reach.', easier: 'Bend your knees slightly.', harder: 'Flex your feet toward you.' },
+  butterfly: { name: 'Butterfly Stretch', areas: ['hips'], kind: 'static', sides: false, pos: 'seat', bed: true,
+    cues: ['Sit with the soles of your feet together, knees falling out.', 'Hold your ankles and sit tall.', 'Let your knees lower on their own. Hinge forward a little for more.'],
+    feel: 'Inner thighs and groin', caution: 'Don’t press your knees down with your hands.', easier: 'Feet further from your body.', harder: 'Feet closer in.' },
+  neck_side: { name: 'Neck Side Stretch', areas: ['upper'], kind: 'static', sides: true, secs: 30, pos: 'seat', bed: true,
+    cues: ['Sit tall and let one ear drop toward your shoulder.', 'Reach the opposite hand down toward the floor.', 'Keep both shoulders relaxed and low.'],
+    feel: 'The side of the neck, tight from looking up while riding', caution: 'Gentle. Never pull on your head.', easier: 'Smaller tilt.', harder: 'Rest the near hand lightly on your head.' },
+  strap_ham: { name: 'Lying Hamstring Stretch', areas: ['ham', 'calf'], kind: 'static', sides: true, pos: 'lie', bed: true, strap: true,
+    cues: ['Lie on your back with a strap or towel around one foot.', 'Raise that leg with the knee straight but not locked.', 'Flex the foot toward you to add the calf.'],
+    feel: 'Hamstrings and calf', caution: 'Keep the other leg relaxed.', easier: 'Bend the other knee, foot on the floor.', harder: 'Lower the other leg flat.' },
+  strap_outer: { name: 'Lying Outer Hip Stretch', areas: ['hips', 'quad'], kind: 'static', sides: true, pos: 'lie', bed: true, strap: true,
+    cues: ['Lie on your back with a strap or towel around one foot, leg raised.', 'Guide that leg across your body toward the other side.', 'Keep both shoulders on the floor.'],
+    feel: 'The outer hip and thigh, along the IT band', caution: 'Only cross as far as your shoulders stay down.', easier: 'Bend the knee slightly.', harder: 'Bring the leg further across.' },
+  figure4: { name: 'Figure-4 Stretch', areas: ['hips', 'back'], kind: 'static', sides: true, pos: 'lie', grp: 'glute4', bed: true,
+    cues: ['Lie on your back with knees bent.', 'Cross one ankle over the opposite knee.', 'Pull the bottom thigh toward your chest.'],
+    feel: 'The glute and outer hip', caution: 'Keep your head and shoulders relaxed on the floor.', easier: 'Leave the bottom foot on the floor.', harder: 'Pull the thigh closer.' },
+  knees_chest: { name: 'Knees-to-Chest Rock', areas: ['back'], kind: 'dynamic', sides: false, secs: 30, pos: 'lie', bed: true,
+    cues: ['Lie on your back and hug both knees in.', 'Rock gently from side to side.', 'Let your low back melt into the floor.'],
+    feel: 'Low back', caution: 'Keep it small and easy.', easier: 'One knee at a time.', harder: 'Add small circles.' },
+  supine_twist: { name: 'Lying Spinal Twist', areas: ['back', 'hips', 'upper'], kind: 'static', sides: true, pos: 'lie', bed: true,
+    cues: ['Lie on your back with your arms out wide.', 'Drop both bent knees to one side.', 'Turn your head the other way if your neck allows.'],
+    feel: 'Low back, outer hip and chest', caution: 'Let gravity do the work.', easier: 'Pillow under your knees.', harder: 'Straighten the top leg.' },
+  happy_baby: { name: 'Happy Baby', areas: ['hips', 'back'], kind: 'static', sides: false, pos: 'lie', bed: true,
+    cues: ['Lie on your back and hold the outside edges of your feet.', 'Knees wide, ankles stacked over knees.', 'Gently draw your knees toward the floor and rock if it feels good.'],
+    feel: 'Inner hips and low back', caution: 'Hold your shins instead if your feet are out of reach.', easier: 'Hold behind the knees.', harder: 'Straighten one leg at a time.' },
+  sphinx: { name: 'Sphinx Pose', areas: ['back', 'hipflex'], kind: 'static', sides: false, pos: 'lie', bed: true,
+    cues: ['Lie face down with your forearms under your shoulders.', 'Lift your chest while your hips stay down.', 'Relax your glutes and low back and breathe slowly.'],
+    feel: 'The front of the hips and spine, the opposite of your riding posture', caution: 'Ease off if your low back pinches.', easier: 'Forearms further forward.', harder: 'Elbows closer in.' },
+  legs_wall: { name: 'Legs Up the Wall', areas: ['ham', 'calf'], kind: 'static', fixed: true, sides: false, secs: 120, pos: 'lie', bed: true,
+    cues: ['Sit sideways to a wall, then swing your legs up as you lie back.', 'Scoot your hips close to the wall.', 'Let your arms rest and breathe slowly.'],
+    feel: 'A gentle hamstring stretch and tired legs draining', caution: 'Bend your knees if your hamstrings pull too much.', easier: 'Hips further from the wall.', harder: 'Hips right against the wall.' },
+  breath: { name: 'Slow Breathing', areas: [], kind: 'breath', fixed: true, sides: false, secs: 90, pos: 'lie', bed: true,
+    cues: ['Lie still with one hand on your belly.', 'Breathe in through your nose for a count of four.', 'Breathe out slowly for a count of six.'],
+    feel: 'Your body settling for sleep', caution: 'Don’t force the breath. Easy and quiet.', easier: 'Count 3 in, 5 out.', harder: 'Count 5 in, 7 out.' },
+  roll_calf: { name: 'Roll Calves', areas: ['calf'], kind: 'roller', sides: true, secs: 40, pos: 'roll', roller: true,
+    cues: ['Sit with the roller under one calf, the other leg crossed on top.', 'Lift your hips and roll slowly from ankle to knee.', 'Pause on tender spots and turn your toes in and out.'],
+    feel: 'Calves', caution: 'Skip the Achilles tendon itself.', easier: 'Uncross the legs.', harder: 'Pause longer on tight spots.' },
+  roll_quad: { name: 'Roll Quads', areas: ['quad', 'hipflex'], kind: 'roller', sides: true, secs: 40, pos: 'roll', roller: true,
+    cues: ['Lie face down with the roller under your thighs.', 'Shift your weight onto one leg.', 'Roll slowly from just above the knee to the hip.'],
+    feel: 'Quads and hip flexors', caution: 'Stay off the kneecap.', easier: 'Both legs at once.', harder: 'Bend the knee while you pause.' },
+  roll_outer: { name: 'Roll Outer Thigh', areas: ['quad', 'hips'], kind: 'roller', sides: true, secs: 40, pos: 'roll', roller: true,
+    cues: ['Lie on your side with the roller under the outer thigh.', 'Turn slightly face-down to roll the outer quad, not the bony band.', 'Plant your top foot to control the pressure.'],
+    feel: 'Outer quad', caution: 'Firm pressure, never sharp pain.', easier: 'More weight on your top foot.', harder: 'Stack your legs.' },
+  roll_glute: { name: 'Roll Glutes', areas: ['hips'], kind: 'roller', sides: true, secs: 40, pos: 'roll', roller: true,
+    cues: ['Sit on the roller and cross one ankle over the opposite knee.', 'Lean toward the side of the crossed leg.', 'Roll in small circles over the glute.'],
+    feel: 'Glutes and deep hip', caution: 'Ease off if you feel tingling down the leg.', easier: 'Don’t cross the leg.', harder: 'Pause on tight spots.' },
+  roll_ham: { name: 'Roll Hamstrings', areas: ['ham'], kind: 'roller', sides: false, secs: 45, pos: 'roll', roller: true,
+    cues: ['Sit with the roller under both thighs and your hands behind you.', 'Lift your hips and roll from the knee to just below your glutes.', 'Turn your toes in and out to reach different spots.'],
+    feel: 'Hamstrings', caution: 'Stay off the back of the knee.', easier: 'Keep your hips lower.', harder: 'One leg at a time.' },
+  roll_upper: { name: 'Roll Upper Back', areas: ['upper'], kind: 'roller', sides: false, secs: 45, pos: 'roll', roller: true,
+    cues: ['Lie back with the roller under your shoulder blades, hands behind your head.', 'Lift your hips and roll from mid-back to the top of the shoulders.', 'Pause and let your upper back arch over the roller.'],
+    feel: 'Upper back, tight from the riding position', caution: 'Keep it off your low back and neck.', easier: 'Hips on the floor.', harder: 'Pause longer.' }
+};
+const POS = { roll: 0, stand: 1, kneel: 2, seat: 3, lie: 4 };
+const SWITCH = 5;
+const TIPS = [
+  'Stretch once you’re warm. Long holds work best after your muscles have been moving.',
+  'A stretch should feel like a 4 out of 10. If it hurts, back off.',
+  'Breathe out as you settle deeper. Holding your breath tightens everything up.',
+  'Riding keeps your hips flexed for hours. Hip flexor and chest stretches undo the riding position.',
+  'Tight calves pull on the Achilles. Do both the straight-knee and bent-knee calf stretches.',
+  'Roll slowly, about an inch per second. Fast rolling does little.',
+  'Ten easy minutes every day beats one long session a week.',
+  'Save long static holds for after a run or ride. Before, move dynamically with leg swings.'
+];
+
+/* ---------------- state ---------------- */
+const DEFAULT_PROFILE = { focus: 'run', spots: ['hipflex', 'hips', 'ham', 'calf'], roller: true, hold: 45, voice: true, slowVoice: false, sound: true, wake: true, favs: [], welcomed: false, lastBackup: null, backupSnooze: null };
+const state = {
+  tab: LS.get('lm.tab', 'today'),
+  profile: { ...DEFAULT_PROFILE, ...LS.get('lm.profile', {}) },
+  sessions: LS.get('lm.sessions', []),
+  ci: null, open: {}, lib: { q: '', tag: 'all' }, confirmDel: null
+};
+const sortSessions = arr => arr.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.endedAt || 0) - (a.endedAt || 0));
+state.sessions = sortSessions(state.sessions);
+function defaultCi() {
+  const h = new Date().getHours();
+  const doneToday = state.sessions.some(s => s.date === today());
+  return { date: today(), purpose: h >= 20 || (doneToday && h >= 17) ? 'bed' : 'daily', activity: null, spots: state.profile.spots.slice(), before: null, mins: 10, seed: 1 };
+}
+{ const saved = LS.get('lm.ci', null); state.ci = saved && saved.date === today() ? { ...defaultCi(), ...saved } : defaultCi(); }
+const saveCi = () => LS.set('lm.ci', state.ci);
+
+let saveWarned = false;
+function persist(key, val) { if (!LS.set(key, val) && !saveWarned) { saveWarned = true; toast('Couldn’t save on this phone. Free up some storage, then back up your log.'); } }
+const Store = {
+  saveProfile() { persist('lm.profile', state.profile); },
+  saveSession(s) { const i = state.sessions.findIndex(x => x.id === s.id); if (i >= 0) state.sessions[i] = s; else state.sessions.push(s); state.sessions = sortSessions(state.sessions); persist('lm.sessions', state.sessions); },
+  deleteSession(id) { state.sessions = state.sessions.filter(x => x.id !== id); persist('lm.sessions', state.sessions); },
+  replace(sessions, profile) { state.sessions = sortSessions(sessions); state.profile = { ...DEFAULT_PROFILE, ...profile }; persist('lm.sessions', state.sessions); persist('lm.profile', state.profile); }
+};
+
+/* ---------------- session builder ---------------- */
+const RUN_W = { calf: 3, ham: 3, hipflex: 2.5, hips: 2.5, quad: 2, back: 1, upper: .5 };
+const RIDE_W = { hipflex: 3, quad: 3, hips: 2.5, back: 2.5, upper: 2.5, ham: 1.5, calf: 1 };
+const BED_W = { hips: 2.5, back: 2.5, ham: 2, hipflex: 1.5, upper: 1.5, calf: 1, quad: 1 };
+function areaWeights(purpose, activity) {
+  const fr = { run: .75, balanced: .5, ride: .25 }[state.profile.focus] ?? .5;
+  const wr = activity === 'run' ? 1 : activity === 'ride' ? 0 : activity === 'both' ? .5 : fr;
+  const w = {};
+  for (const k of Object.keys(AREAS)) w[k] = RUN_W[k] * wr + RIDE_W[k] * (1 - wr);
+  if (purpose === 'bed') for (const k of Object.keys(AREAS)) w[k] = BED_W[k] + .4 * w[k];
+  return w;
+}
+function holdFor(s, purpose, mins) {
+  if (s.kind !== 'static' || s.fixed) return s.secs;
+  let h = state.profile.hold + (purpose === 'bed' ? 15 : 0);
+  if (s.secs) h = Math.min(h, s.secs + (purpose === 'bed' ? 10 : 0));
+  if (mins && mins <= 5) h = Math.min(h, purpose === 'bed' ? 40 : 30);
+  return h;
+}
+const setupFor = (s, first) => Math.max(7, Math.min(13, Math.round((s.name.split(' ').length + s.cues[0].split(' ').length) / 2.6 + 3))) + (first ? 2 : 0);
+const costOf = (it, first) => setupFor(ST[it.id], first) + it.hold * (it.sides ? 2 : 1) + (it.sides ? SWITCH : 0);
+function buildSession(ci) {
+  const { purpose, activity, spots, mins, seed } = ci;
+  const r = rng(seed * 7919 + mins * 101 + purpose.length * 13 + (activity || 'x').charCodeAt(0) + spots.length);
+  const W = areaWeights(purpose, activity);
+  const budget = mins * 60;
+  const last = state.sessions[0];
+  const lastIds = new Set(last && last.date >= addDays(today(), -1) ? (last.items || []).map(i => i.id) : []);
+  const favs = state.profile.favs || [];
+  const finisherIds = purpose === 'bed' ? (mins >= 15 ? ['legs_wall', 'breath'] : ['breath']) : [];
+  const eligible = id => {
+    const s = ST[id];
+    if (s.kind === 'breath' || finisherIds.includes(id)) return false;
+    if (s.roller && !state.profile.roller) return false;
+    if (purpose === 'bed' && !s.bed) return false;
+    if (s.fixed && purpose !== 'bed' && !(purpose === 'after' && mins >= 15)) return false;
+    return true;
+  };
+  const score = id => {
+    const s = ST[id];
+    let v = s.areas.reduce((n, a, i) => n + (W[a] || 0) * (i === 0 ? 1 : .5), 0);
+    if (spots.includes(s.areas[0])) v += 3; else if (s.areas.some(a => spots.includes(a))) v += 1.5;
+    if (favs.includes(id)) v += 1.5;
+    if (purpose === 'after' && s.kind === 'static') v += 1;
+    if (purpose === 'daily' && !ci.activity && s.kind === 'dynamic') v += .8;
+    if (lastIds.has(id)) v -= 1.2;
+    return v + r() * 2.2;
+  };
+  const LIMIT = { roller: { daily: 2, after: 1, bed: 0 }[purpose], dynamic: { daily: 2, after: 1, bed: 1 }[purpose] };
+  const ranked = Object.keys(ST).filter(eligible).map(id => ({ id, v: score(id) })).sort((a, b) => b.v - a.v);
+  const picked = [], count = { roller: 0, dynamic: 0 }, grps = new Set();
+  let used = 0;
+  let reserve = 0;
+  const finishers = [];
+  if (purpose === 'bed') {
+    finishers.push({ id: 'breath', hold: ST.breath.secs, sides: false });
+    if (mins >= 15) finishers.unshift({ id: 'legs_wall', hold: ST.legs_wall.secs, sides: false });
+    if (mins <= 5) finishers[finishers.length - 1].hold = 60;
+    reserve = finishers.reduce((n, f) => n + costOf(f, false), 0);
+  }
+  const tryAdd = id => {
+    const s = ST[id];
+    if (picked.some(p => p.id === id)) return false;
+    if (s.grp && grps.has(s.grp)) return false;
+    if ((s.kind === 'roller' || s.kind === 'dynamic') && count[s.kind] >= LIMIT[s.kind]) return false;
+    const it = { id, hold: holdFor(s, purpose, mins), sides: !!s.sides };
+    const c = costOf(it, picked.length === 0);
+    if (used + c > budget - reserve + 15) return false;
+    picked.push(it); used += c; if (s.grp) grps.add(s.grp); if (count[s.kind] != null) count[s.kind]++;
+    return true;
+  };
+  // Every tight spot gets a stretch aimed squarely at it, most important spots first.
+  for (const a of spots.slice().sort((x, y) => (W[y] || 0) - (W[x] || 0))) {
+    if (picked.some(p => ST[p.id].areas[0] === a)) continue;
+    const prim = ranked.filter(x => ST[x.id].areas[0] === a && ST[x.id].kind !== 'roller');
+    if (purpose !== 'daily') prim.sort((x, y) => (ST[y.id].kind === 'static') - (ST[x.id].kind === 'static'));
+    if (prim.length && prim.some(x => tryAdd(x.id))) continue;
+    if (picked.some(p => ST[p.id].areas.includes(a))) continue;
+    ranked.filter(x => ST[x.id].areas.includes(a)).some(x => tryAdd(x.id));
+  }
+  for (const x of ranked) tryAdd(x.id);
+  const kindRank = s => s.fixed ? 9 : POS[s.pos];
+  const order = new Map(ranked.map((x, i) => [x.id, i]));
+  picked.sort((a, b) => kindRank(ST[a.id]) - kindRank(ST[b.id]) || order.get(a.id) - order.get(b.id));
+  const items = [...picked, ...finishers];
+  const top = Object.entries({ ...W }).map(([k, v]) => [k, v + (spots.includes(k) ? 3 : 0)]).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => AREAS[k].toLowerCase());
+  const lead = purpose === 'bed' ? 'Slow holds on the floor, ending with easy breathing.'
+    : purpose === 'after' ? (activity === 'ride' ? 'After a ride: open up the riding position.' : activity === 'both' ? 'After a run and a ride: longer holds, no bouncing.' : 'After a run: longer holds, no bouncing.')
+    : activity === 'run' ? 'You ran today.' : activity === 'ride' ? 'You rode today.' : activity === 'both' ? 'You ran and rode today.' : activity === 'rest' ? 'Rest day: a bit more moving mobility work.' : `Weighted toward ${{ run: 'running', balanced: 'running and cycling', ride: 'cycling' }[state.profile.focus]}.`;
+  return { items, est: Math.round(items.reduce((n, it, i) => n + costOf(it, i === 0), 0) / 60), reason: `${lead} Focus: ${listTxt(top)}.` };
+}
+const PURPOSE = { daily: 'Daily stretch', after: 'After your run', bed: 'Wind down for bed' };
+function purposeTitle(ci) {
+  if (ci.purpose === 'after') return ci.activity === 'ride' ? 'After your ride' : ci.activity === 'both' ? 'After your workout' : 'After your run';
+  return PURPOSE[ci.purpose];
+}
+const holdTxt = it => `${it.hold >= 90 ? mmss(it.hold * 1000) : it.hold + 's'}${it.sides ? ' each side' : ''}`;
+
+/* ---------------- views ---------------- */
+function render() {
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-current', b.dataset.tab === state.tab ? 'page' : 'false'));
+  $('#view').innerHTML = state.tab === 'library' ? viewLibrary() : state.tab === 'progress' ? viewProgress() : viewToday();
+}
+function dayStreak() {
+  const days = new Set(state.sessions.map(s => s.date));
+  let d = today(); if (!days.has(d)) d = addDays(d, -1);
+  let n = 0; while (days.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+function viewToday() {
+  const t = today(), p = state.profile, ci = state.ci;
+  let html = `<p class="eyebrow" style="margin-top:4px">${parseYmd(t).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>`;
+  const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (ios && !standalone && LS.get('lm.installHint', '') !== 'hide') {
+    html += `<div class="banner"><div><p>Install Limber on your iPhone</p><span class="small">In Safari, tap the Share button, then <b>Add to Home Screen</b>. Use the installed app for your sessions: it keeps its own log, separate from Safari.</span></div><button class="btn sm" data-act="install-hide">Hide</button></div>`;
+  }
+  const lb = p.lastBackup;
+  if (state.sessions.length >= 5 && (!lb || daysBetween(lb, t) >= 30) && !(p.backupSnooze && p.backupSnooze > t)) {
+    html += `<div class="banner warm"><div><p>Back up your log</p><span class="small">${lb ? `Your last backup was ${daysBetween(lb, t)} days ago.` : 'You haven’t made a backup yet.'} It keeps your history safe if you delete the app or change phones.</span></div><div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="backup-later">Later</button><button class="btn primary sm" data-act="backup">Back up</button></div></div>`;
+  }
+  if (!p.welcomed) {
+    html += `<div class="card stack" style="margin-top:12px"><h2 class="h-display" style="font-size:1.5rem">Welcome to Limber</h2>
+      <p>Tell it what you did today and where you’re tight, and it builds a guided session. A voice talks you through each stretch, so you can keep your eyes off the screen.</p>
+      <p class="small muted">Stretching should never hurt: aim for a mild pull, about 4 out of 10. If you’re nursing an injury, check with a physio before stretching it.</p>
+      <div><button class="btn sm" data-act="welcome-ok">Got it</button></div></div>`;
+  }
+  const doneToday = state.sessions.filter(s => s.date === t);
+  if (doneToday.length) {
+    const m = doneToday.reduce((n, s) => n + (s.minutes || 0), 0);
+    html += `<div class="banner"><div><p>You’ve stretched today ${CHECK.replace('<svg', '<svg style="width:16px;height:16px;vertical-align:-3px;color:var(--good)"')}</p><span class="small">${doneToday.length} session${doneToday.length > 1 ? 's' : ''}, ${m} min. ${ci.purpose === 'bed' ? 'A wind-down before bed is set up below.' : 'Another short one is always welcome.'}</span></div></div>`;
+  }
+  const chip = (act, v, cur, label) => `<button class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${esc(label)}</button>`;
+  html += `<div class="card ci" style="margin-top:12px"><h2>How are your legs today?</h2>
+    <div><div class="field-lbl">Session</div><div class="seg">${chip('ci-purpose', 'daily', ci.purpose, 'Daily')}${chip('ci-purpose', 'after', ci.purpose, 'After a workout')}${chip('ci-purpose', 'bed', ci.purpose, 'Bedtime')}</div></div>
+    <div><div class="field-lbl">Today you…</div><div class="seg">${chip('ci-act', 'run', ci.activity, 'Ran')}${chip('ci-act', 'ride', ci.activity, 'Rode')}${chip('ci-act', 'both', ci.activity, 'Both')}${chip('ci-act', 'rest', ci.activity, 'Rested')}</div></div>
+    <div><div class="field-lbl">Tight spots</div><div class="chips">${Object.entries(AREAS).map(([k, l]) => `<button class="chip" data-act="ci-spot" data-v="${k}" aria-pressed="${ci.spots.includes(k)}">${esc(l)}</button>`).join('')}</div></div>
+    <div><div class="field-lbl">How tight overall?</div><div class="seg">${[1, 2, 3, 4].map(v => chip('ci-before', String(v), String(ci.before), TIGHT[v])).join('')}</div></div>
+    <div><div class="field-lbl">Length</div><div class="seg">${[5, 10, 15].map(v => chip('ci-mins', String(v), String(ci.mins), v + ' min')).join('')}</div></div></div>`;
+  const plan = buildSession(ci);
+  state.plan = plan;
+  html += `<div class="slab" style="margin-top:12px"><p class="eyebrow">Your session · about ${plan.est} min</p><h1 class="h-display">${esc(purposeTitle(ci))}</h1>
+    <p class="why">${esc(plan.reason)}</p>
+    <div class="st-list">${plan.items.map(it => { const s = ST[it.id]; return `<div class="st-li"><b>${esc(s.name)}${s.kind !== 'static' ? `<span class="tag">${KIND[s.kind]}</span>` : ''}</b><span class="t">${holdTxt(it)}</span>${s.areas.length ? `<span class="a">${s.areas.map(a => AREAS[a]).join(' · ')}</span>` : ''}</div>`; }).join('')}</div>
+    <div class="row" style="flex-wrap:nowrap"><button class="btn" data-act="shuffle">Shuffle</button><button class="btn primary" style="flex:1" data-act="start">${ICON.play}Start session</button></div></div>`;
+  const mon = mondayOf(t), days = new Set(state.sessions.map(s => s.date)), names = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const wk = [...Array(7)].map((_, i) => addDays(mon, i)).filter(d => days.has(d)).length;
+  const streak = dayStreak();
+  html += `<div class="sec-head"><h2>This week</h2><span class="small muted num">${wk} of 7 days</span></div>
+    <div class="card"><div class="week-strip">${names.map((n, i) => { const d = addDays(mon, i), on = days.has(d); return `<div class="wd ${on ? 'on' : ''} ${d === t ? 'today' : ''}"><span>${n}</span><i>${on ? CHECK : ''}</i></div>`; }).join('')}</div>
+    <p class="small muted" style="margin-top:12px">${streak ? `Streak: <b class="num" style="color:var(--ink)">${streak}</b> day${streak > 1 ? 's' : ''} in a row.` : 'Stretch today to start a streak.'}</p></div>`;
+  html += `<div class="sec-head"><h2>Tip</h2></div><div class="card tip">${ICON.leaf}<p>${esc(TIPS[Math.floor(parseYmd(t) / 86400000) % TIPS.length])}</p></div>`;
+  return html;
+}
+const TIGHT = { 1: 'Loose', 2: 'Okay', 3: 'Tight', 4: 'Very tight' };
+
+function viewLibrary() {
+  const { q, tag } = state.lib, ql = q.trim().toLowerCase();
+  const favs = state.profile.favs || [];
+  const filters = [['all', 'All'], ['fav', 'Starred'], ...Object.entries(AREAS), ['bed', 'Bedtime'], ['roller', 'Foam roller'], ['dynamic', 'Moving']];
+  const match = (id, s) => {
+    if (tag === 'fav' && !favs.includes(id)) return false;
+    if (tag === 'bed' && !s.bed) return false;
+    if (tag === 'roller' && s.kind !== 'roller') return false;
+    if (tag === 'dynamic' && s.kind !== 'dynamic') return false;
+    if (AREAS[tag] && !s.areas.includes(tag)) return false;
+    return !ql || s.name.toLowerCase().includes(ql) || s.areas.some(a => AREAS[a].toLowerCase().includes(ql)) || s.feel.toLowerCase().includes(ql);
+  };
+  const list = Object.entries(ST).filter(([id, s]) => match(id, s)).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  let html = `<div class="stack" style="margin-top:4px"><input class="search" id="lib-q" type="search" placeholder="Search stretches" value="${esc(q)}" aria-label="Search stretches">
+    <div class="chips">${filters.map(([k, l]) => `<button class="chip" data-act="lib-tag" data-tag="${k}" aria-pressed="${tag === k}">${esc(l)}</button>`).join('')}</div></div>
+    <div class="stack" style="margin-top:14px" id="lib-list">`;
+  if (!list.length) html += `<div class="empty"><p>${tag === 'fav' ? 'Tap the star on any stretch to keep it here. Starred stretches show up more often in your sessions.' : `No stretches match “${esc(q)}”.`}</p></div>`;
+  for (const [id, s] of list) html += libItem(id, s);
+  return html + `</div>`;
+}
+function libItem(id, s) {
+  const open = state.open['lib-' + id], fav = (state.profile.favs || []).includes(id);
+  const meta = [s.areas.map(a => AREAS[a]).join(' · '), s.kind !== 'static' ? KIND[s.kind] : '', s.bed ? 'Bedtime' : ''].filter(Boolean).join(' · ');
+  const hold = holdFor(s, 'daily');
+  return `<div class="lib-item"><div class="lib-head"><button data-act="toggle" data-k="lib-${id}" aria-expanded="${!!open}"><b>${esc(s.name)}</b><span class="tags">${esc(meta)}</span></button>
+    <button class="star" data-act="fav" data-id="${id}" aria-pressed="${fav}" aria-label="${fav ? 'Unstar' : 'Star'} ${esc(s.name)}">${fav ? ICON.starOn : ICON.star}</button></div>
+    ${open ? `<div class="lib-body"><ol class="cues">${s.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ol>
+      <dl class="kv"><dt>Feel it in</dt><dd>${esc(s.feel)}</dd><dt>Careful</dt><dd>${esc(s.caution)}</dd><dt>Easier</dt><dd>${esc(s.easier)}</dd><dt>Harder</dt><dd>${esc(s.harder)}</dd></dl>
+      <div class="row"><button class="btn sm primary" data-act="try" data-id="${id}">${ICON.play}Try it · ${hold}s${s.sides ? ' each side' : ''}</button><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.name + (s.kind === 'roller' ? ' foam roller' : ' stretch') + ' how to')}" target="_blank" rel="noopener" class="small" style="font-weight:700">Watch a demo ↗</a></div></div>` : ''}</div>`;
+}
+
+/* ---------------- progress ---------------- */
+function areaSecs(s) {
+  const out = {};
+  for (const it of s.items || []) {
+    if (!it.done || !ST[it.id]) continue;
+    const a = ST[it.id].areas; if (!a.length) continue;
+    const secs = it.hold * (it.sides ? 2 : 1);
+    a.forEach(k => { out[k] = (out[k] || 0) + secs / a.length; });
+  }
+  return out;
+}
+function viewProgress() {
+  const S = state.sessions;
+  if (!S.length) return `<div class="empty" style="margin-top:8px">${ICON.leaf.replace('<svg', '<svg style="width:36px;height:36px;color:var(--ink-3)"')}<h2 class="h-display" style="font-size:1.5rem">No sessions yet</h2>
+    <p>Finish your first session and this page fills in: your day streak, a stretching calendar, how tight you feel before and after, and which areas get the most attention.</p>
+    <button class="btn primary" data-act="tab" data-tab="today">Go to today’s session</button></div>`;
+  const mins = S.reduce((n, s) => n + (s.minutes || 0), 0);
+  let html = `<div class="stats" style="margin-top:4px"><div class="stat"><b>${dayStreak()}</b><span>Day streak</span></div><div class="stat"><b>${S.length}</b><span>Sessions</span></div><div class="stat"><b>${mins >= 600 ? Math.round(mins / 60) + 'h' : mins}</b><span>${mins >= 600 ? 'Hours' : 'Minutes'}</span></div></div>`;
+  html += `<div class="sec-head"><h2>Last 12 weeks</h2></div><div class="card">${heatmap()}<div class="readout" id="ro-heat">Tap a day to see what you did.</div>
+    <div class="legend"><span><i style="background:var(--heat0)"></i>None</span><span><i style="background:var(--heat1)"></i>Under 8 min</span><span><i style="background:var(--heat2)"></i>8–15</span><span><i style="background:var(--heat3)"></i>Over 15</span></div></div>`;
+  const pairs = S.filter(s => s.before && s.after).slice(0, 14).reverse();
+  html += `<div class="sec-head"><h2>Before and after</h2></div><div class="card">`;
+  if (pairs.length) {
+    const better = pairs.filter(s => s.after < s.before).length;
+    html += `<p class="small" style="margin-bottom:8px">You felt looser after <b>${better} of ${pairs.length}</b> session${pairs.length > 1 ? 's' : ''}.</p>${dumbbell(pairs)}<div class="readout" id="ro-bf">${esc(bfTip(pairs[pairs.length - 1]))}</div>
+      <div class="legend"><span><i class="ring"></i>Before</span><span><i class="dot"></i>After</span></div>`;
+  } else html += `<p class="small muted">Rate how tight you feel before (on Today) and after a session to see this.</p>`;
+  html += `</div>`;
+  const cutoff = addDays(today(), -29), tot = {};
+  S.filter(s => s.date >= cutoff).forEach(s => { const a = areaSecs(s); for (const k in a) tot[k] = (tot[k] || 0) + a[k]; });
+  html += `<div class="sec-head"><h2>Where your time went</h2><span class="small muted">Last 30 days</span></div><div class="card">${areaBars(tot)}</div>`;
+  html += `<div class="sec-head"><h2>History</h2><button class="link-btn small" data-act="export">Export CSV</button></div><div class="stack">${S.map(histItem).join('')}</div>`;
+  return html;
+}
+const bfTip = s => `${fmtDay(s.date)}: ${TIGHT[s.before].toLowerCase()} before, ${TIGHT[s.after].toLowerCase()} after · ${s.title}`;
+function dumbbell(pairs) {
+  const W = 340, H = 160, L = 74, R = 14, T = 12, B = 22, n = pairs.length;
+  const xs = i => n <= 1 ? L + (W - L - R) / 2 : L + i * (W - L - R) / (n - 1);
+  const ys = v => T + (v - 1) / 3 * (H - T - B);
+  let g = '';
+  for (let v = 1; v <= 4; v++) g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${ys(v)}" y2="${ys(v)}"/><text class="axis" x="${L - 8}" y="${ys(v) + 4}" text-anchor="end">${TIGHT[v]}</text>`;
+  pairs.forEach((s, i) => {
+    const x = xs(i).toFixed(1), b = ys(s.before).toFixed(1), a = ys(s.after).toFixed(1);
+    g += `<line class="stem ${s.after < s.before ? 'better' : ''}" x1="${x}" x2="${x}" y1="${b}" y2="${a}"/><circle class="before" cx="${x}" cy="${b}" r="5"/><circle class="after" cx="${x}" cy="${a}" r="5"/>`;
+    g += `<rect class="hit" data-act="bf" data-tip="${esc(bfTip(s))}" x="${(xs(i) - 12).toFixed(1)}" y="${T - 6}" width="24" height="${H - T - B + 12}"><title>${esc(bfTip(s))}</title></rect>`;
+  });
+  g += `<text class="axis" x="${xs(0)}" y="${H - 4}" text-anchor="${n > 1 ? 'start' : 'middle'}">${fmtShort(pairs[0].date)}</text>${n > 1 ? `<text class="axis" x="${xs(n - 1)}" y="${H - 4}" text-anchor="end">${fmtShort(pairs[n - 1].date)}</text>` : ''}`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tightness before and after recent sessions">${g}</svg>`;
+}
+function areaBars(tot) {
+  const rows = Object.keys(AREAS).map(k => [k, Math.round((tot[k] || 0) / 60)]).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map(r => r[1]));
+  const W = 340, rowH = 30, L = 132, R = 44, H = rows.length * rowH;
+  let g = '';
+  rows.forEach(([k, m], i) => {
+    const y = i * rowH, bw = m ? Math.max(6, (W - L - R) * m / max) : 0;
+    g += `<text class="lbl" x="${L - 10}" y="${y + 19}" text-anchor="end">${AREAS[k]}</text>`;
+    g += `<rect class="bar0" x="${L}" y="${y + 7}" width="${W - L - R}" height="16" rx="4"/>`;
+    if (bw) g += `<rect class="bar" x="${L}" y="${y + 7}" width="${bw.toFixed(1)}" height="16" rx="4"/>`;
+    g += `<text class="val" x="${L + bw + 6}" y="${y + 19}">${m} min</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Minutes stretched per body area, last 30 days">${g}</svg>`;
+}
+function heatmap() {
+  const t = today(), start = addDays(mondayOf(t), -77), byDay = {};
+  state.sessions.forEach(s => { (byDay[s.date] = byDay[s.date] || []).push(s); });
+  const cs = 22, gap = 3, L = 22, T = 4;
+  let g = '';
+  ['M', '', 'W', '', 'F', '', 'S'].forEach((l, r) => { if (l) g += `<text class="axis" x="${L - 8}" y="${T + r * (cs + gap) + cs / 2 + 4}" text-anchor="end">${l}</text>`; });
+  for (let c = 0; c < 12; c++) {
+    let cnt = 0;
+    for (let r = 0; r < 7; r++) {
+      const d = addDays(start, c * 7 + r); if (d > t) continue;
+      const ss = byDay[d] || []; if (ss.length) cnt++;
+      const m = ss.reduce((n, s) => n + (s.minutes || 0), 0);
+      const lv = !ss.length ? 0 : m < 8 ? 1 : m <= 15 ? 2 : 3;
+      const tip = ss.length ? `${fmtDay(d)}: ${ss.map(s => `${s.title} (${s.minutes || '–'} min)`).join(', ')}` : `${fmtDay(d)}: no stretching`;
+      const x = L + c * (cs + gap), y = T + r * (cs + gap);
+      g += `<rect class="cell h${lv}" x="${x}" y="${y}" width="${cs}" height="${cs}" rx="5" data-act="cell" data-tip="${esc(tip)}"><title>${esc(tip)}</title></rect>`;
+      if (d === t) g += `<rect class="todayc" x="${x + .75}" y="${y + .75}" width="${cs - 1.5}" height="${cs - 1.5}" rx="4.5"/>`;
+    }
+    if (cnt || c === 11) g += `<text class="wc" x="${L + c * (cs + gap) + cs / 2}" y="${T + 7 * (cs + gap) + 11}" text-anchor="middle">${cnt}</text>`;
+  }
+  return `<svg class="chart" viewBox="0 0 ${L + 12 * (cs + gap)} ${T + 7 * (cs + gap) + 16}" role="img" aria-label="Stretching calendar, last 12 weeks. Numbers are days stretched each week.">${g}</svg>`;
+}
+function histItem(s) {
+  const open = state.open['h-' + s.id];
+  const done = (s.items || []).filter(i => i.done).length, tot = (s.items || []).length;
+  let body = '';
+  if (open) {
+    const confirming = state.confirmDel === s.id;
+    body = `<div class="hist-body"><div class="mini-list">${(s.items || []).map(i => `<div><span>${i.done ? '' : '<s>'}${esc(ST[i.id] ? ST[i.id].name : i.id)}${i.done ? '' : '</s>'}</span><span>${holdTxt(i)}</span></div>`).join('')}</div>
+      ${s.notes ? `<p class="small" style="white-space:pre-wrap">${esc(s.notes)}</p>` : ''}
+      ${confirming ? `<div class="banner warm" style="margin:0"><p class="small">Delete this session for good?</p><div class="row"><button class="btn sm" data-act="del-no">Keep</button><button class="btn sm danger" data-act="del-yes" data-id="${s.id}">Delete</button></div></div>`
+        : `<div class="row"><button class="btn sm" data-act="edit-log" data-id="${s.id}">Edit details</button><button class="btn sm danger" data-act="del-ask" data-id="${s.id}">Delete</button></div>`}</div>`;
+  }
+  const bf = s.before && s.after ? `<span class="badge ${s.after < s.before ? 'good' : ''}">${TIGHT[s.before]} → ${TIGHT[s.after].toLowerCase()}</span>` : s.after ? `<span class="badge">After: ${TIGHT[s.after].toLowerCase()}</span>` : '';
+  return `<div class="hist-item"><button data-act="toggle" data-k="h-${s.id}" aria-expanded="${!!open}"><span class="hist-top"><b>${esc(s.title)}</b><span class="small muted num">${fmtDay(s.date)}</span></span>
+    <span class="badges"><span class="badge num">${s.minutes || '–'} min</span><span class="badge num">${done}/${tot} stretches</span>${bf}</span></button>${body}</div>`;
+}
+
+/* ---------------- sheets ---------------- */
+let sheetCtx = null, lastSheet = null;
+function openSheet(html, type) {
+  const panel = $('#sheet-panel'), keep = !$('#sheet').hidden && type && type === lastSheet, sc = keep ? panel.scrollTop : 0;
+  panel.innerHTML = `<div class="sheet-grab"></div>${html}`; $('#sheet').hidden = false; lastSheet = type || null; panel.scrollTop = sc;
+}
+function closeSheet() { $('#sheet').hidden = true; $('#sheet-panel').innerHTML = ''; sheetCtx = null; lastSheet = null; }
+const closeBtn = `<button class="icon-btn" data-act="sheet-close" aria-label="Close">${ICON.close}</button>`;
+function openSettings() {
+  sheetCtx = { type: 'settings' };
+  const p = state.profile, chip = (act, v, cur, l) => `<button class="chip" data-act="${act}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${esc(l)}</button>`;
+  const tog = (act, on, l) => `<div class="toggle-row"><span>${l}</span><button class="chip" data-act="${act}" aria-pressed="${!!on}">${on ? 'On' : 'Off'}</button></div>`;
+  openSheet(`<div class="sheet-head"><div><p class="eyebrow">Settings</p><h2>Your setup</h2></div>${closeBtn}</div>
+    <div class="field"><span class="lbl">Training focus right now</span><div class="seg">${chip('set-focus', 'run', p.focus, 'More running')}${chip('set-focus', 'balanced', p.focus, 'Even mix')}${chip('set-focus', 'ride', p.focus, 'More cycling')}</div><p class="hint">Change this when your training shifts. It steers sessions on days you don’t say what you did.</p></div>
+    <div class="field"><span class="lbl">Usual tight spots</span><div class="chips">${Object.entries(AREAS).map(([k, l]) => `<button class="chip" data-act="set-spot" data-v="${k}" aria-pressed="${p.spots.includes(k)}">${esc(l)}</button>`).join('')}</div><p class="hint">Pre-selected on Today each morning.</p></div>
+    <div class="field"><span class="lbl">Hold length for static stretches</span><div class="seg">${[30, 45, 60].map(v => chip('set-hold', v, p.hold, v + 's')).join('')}</div><p class="hint">Bedtime holds run 15 seconds longer.</p></div>
+    <div class="field"><span class="lbl">Equipment</span>${tog('set-roller', p.roller, 'Foam roller')}<p class="hint">Strap stretches always work with a towel instead.</p></div>
+    <div class="field"><span class="lbl">Guidance</span>${tog('set-voice', p.voice, 'Spoken cues')}${tog('set-slow', p.slowVoice, 'Slower voice')}${tog('set-sound', p.sound, 'Beeps')}${tog('set-wake', p.wake, 'Keep screen awake during sessions')}
+      <div class="row" style="margin-top:6px"><button class="btn sm" data-act="test-voice">Test the voice</button></div><p class="hint">If you can’t hear the voice or beeps, check that silent mode is off and the volume is up.</p></div>
+    <div class="field"><span class="lbl">Your data</span><p class="small muted">Your log lives on this phone, inside the app. If you remove the app from your Home Screen, its data goes with it, so back up now and then to Files or iCloud Drive.</p>
+      <p class="small">Last backup: <b>${p.lastBackup ? fmtDay(p.lastBackup) : 'never'}</b></p>
+      <div class="row"><button class="btn sm primary" data-act="backup">Back up now</button><button class="btn sm" data-act="restore-pick">Restore from backup</button></div>
+      <div class="row"><button class="btn sm" data-act="export">Export CSV</button><button class="btn sm danger" data-act="wipe-ask">Erase all sessions</button></div><div id="wipe-confirm"></div></div>`, 'settings');
+}
+function openFinish(existing) {
+  const s = existing || P.s.session;
+  const isEdit = !!existing;
+  sheetCtx = { type: 'finish', id: s.id, isEdit, f: { date: s.date || today(), minutes: isEdit ? s.minutes : Math.max(1, Math.round(P.activeMs() / 60000)), before: s.before ?? null, after: s.after ?? null, notes: s.notes || '' } };
+  renderFinish();
+}
+function renderFinish() {
+  const c = sheetCtx, f = c.f;
+  const src = c.isEdit ? state.sessions.find(x => x.id === c.id) : P.s.session;
+  const done = src.items.filter(i => i.done).length;
+  const chip = (act, v, cur) => `<button class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${TIGHT[v]}</button>`;
+  openSheet(`<div class="sheet-head"><div><p class="eyebrow">${c.isEdit ? 'Edit session' : done === src.items.length ? 'Session done' : 'Ending early'}</p><h2>${esc(src.title)}</h2></div>${closeBtn}</div>
+    <p class="small muted num" style="margin-bottom:16px">${done} of ${src.items.length} stretches done</p>
+    <div class="field"><span class="lbl">How tight were you before?</span><div class="seg">${[1, 2, 3, 4].map(v => chip('f-before', v, f.before)).join('')}</div></div>
+    <div class="field"><span class="lbl">How tight do you feel now?</span><div class="seg">${[1, 2, 3, 4].map(v => chip('f-after', v, f.after)).join('')}</div></div>
+    <div class="row" style="flex-wrap:nowrap;gap:12px"><div class="field" style="flex:1.4;min-width:0"><label for="f-date">Date</label><input class="input" id="f-date" type="date" value="${f.date}" max="${today()}"></div>
+      <div class="field" style="flex:1;min-width:0"><label for="f-min">Minutes</label><input class="input num" id="f-min" type="number" inputmode="numeric" min="1" max="120" value="${f.minutes}"></div></div>
+    <div class="field"><label for="f-notes">Notes</label><textarea class="input" id="f-notes" placeholder="Anything that felt tight, or a stretch you liked">${esc(f.notes)}</textarea></div>
+    <button class="btn primary block" data-act="f-save">${c.isEdit ? 'Save changes' : 'Save session'}</button>
+    ${c.isEdit ? '' : `<button class="btn block" style="margin-top:10px" data-act="f-discard">Don’t log this one</button>`}`, 'finish');
+}
+function readFinish() {
+  const f = sheetCtx.f, d = $('#f-date'), m = $('#f-min'), n = $('#f-notes');
+  if (d && d.value) f.date = d.value;
+  if (m) f.minutes = Math.max(1, Math.min(120, parseInt(m.value, 10) || f.minutes));
+  if (n) f.notes = n.value;
+}
+function saveFinish() {
+  readFinish();
+  const c = sheetCtx, f = c.f;
+  if (c.isEdit) { Store.saveSession({ ...state.sessions.find(x => x.id === c.id), ...f, notes: f.notes.trim() }); closeSheet(); render(); toast('Session updated'); return; }
+  const s = P.s.session;
+  const log = { id: s.id, title: s.title, purpose: s.purpose, activity: s.activity, spots: s.spots, mins: s.mins, date: f.date, minutes: f.minutes, before: f.before, after: f.after, notes: f.notes.trim(), endedAt: Date.now(), items: s.items.map(i => ({ id: i.id, hold: i.hold, sides: i.sides, done: !!i.done })) };
+  Store.saveSession(log);
+  P.close(true); closeSheet();
+  if (state.ci.purpose !== 'bed' && new Date().getHours() >= 17) { state.ci.purpose = 'bed'; saveCi(); }
+  render();
+  const st = dayStreak();
+  toast(st > 1 ? `Saved. ${st} days in a row.` : 'Session saved');
+}
+
+/* ---------------- voice and sound ---------------- */
+let audioCtx = null, voicePick = null;
+function unlockAudio() { try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} }
+function beep(freq, dur, vol = .2) {
+  if (!state.profile.sound || !audioCtx) return;
+  try { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = freq; o.type = 'sine'; g.gain.setValueAtTime(.0001, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + .015); g.gain.exponentialRampToValueAtTime(.0001, audioCtx.currentTime + dur); o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur + .03); } catch (e) {}
+}
+function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+function pickVoice() {
+  try {
+    const vs = speechSynthesis.getVoices().filter(v => /^en(-|_)/i.test(v.lang));
+    voicePick = vs.find(v => /Samantha|Ava|Allison|Karen|Moira|Serena/i.test(v.name) && v.localService) || vs.find(v => /en-US/i.test(v.lang) && v.localService) || vs[0] || null;
+  } catch (e) { voicePick = null; }
+}
+try { if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } } catch (e) {}
+function say(text, night) {
+  if (!state.profile.voice || !('speechSynthesis' in window) || !text) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    if (voicePick) u.voice = voicePick;
+    u.lang = voicePick ? voicePick.lang : 'en-US';
+    u.rate = (state.profile.slowVoice ? .86 : .96) * (night ? .9 : 1);
+    u.pitch = 1; u.volume = night ? .85 : 1;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function hush() { try { 'speechSynthesis' in window && speechSynthesis.cancel(); } catch (e) {} }
+let wakeLock = null;
+async function requestWake() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { wakeLock = null; } }
+function releaseWake() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+
+/* ---------------- guided player ---------------- */
+const RING_C = 2 * Math.PI * 104;
+const P = {
+  s: null, iv: null,
+  activeMs() { const s = this.s; if (!s) return 0; return s.activeMs + (s.paused ? 0 : Date.now() - s.resumedAt); },
+  start(session) {
+    unlockAudio(); hush();
+    const phases = [];
+    session.items.forEach((it, i) => {
+      const s = ST[it.id];
+      phases.push({ i, type: 'setup', secs: setupFor(s, i === 0) });
+      if (it.sides) { phases.push({ i, type: 'hold', side: 'L', secs: it.hold }); phases.push({ i, type: 'switch', secs: SWITCH }); phases.push({ i, type: 'hold', side: 'R', secs: it.hold }); }
+      else phases.push({ i, type: 'hold', secs: it.hold });
+    });
+    this.s = { session, phases, pi: 0, endsAt: 0, remaining: 0, paused: false, activeMs: 0, resumedAt: Date.now(), lastSec: null, said10: false, breathStep: -1, night: session.purpose === 'bed' };
+    $('#player').hidden = false; document.body.style.overflow = 'hidden';
+    if (state.profile.wake) requestWake();
+    this.go(0, false);
+    clearInterval(this.iv); this.iv = setInterval(() => this.tick(), 200);
+  },
+  phase() { return this.s.phases[this.s.pi]; },
+  go(pi, silent) {
+    const s = this.s; s.pi = pi; const ph = s.phases[pi];
+    s.endsAt = Date.now() + ph.secs * 1000; s.remaining = ph.secs * 1000; s.lastSec = null; s.said10 = false; s.breathStep = -1;
+    if (!silent) this.announce(ph);
+    this.render();
+  },
+  announce(ph) {
+    const s = this.s, it = s.session.items[ph.i], st = ST[it.id], n = s.night;
+    if (ph.type === 'setup') {
+      hush();
+      const first = ph.i === 0;
+      say(`${first ? '' : 'Next. '}${st.name}. ${it.sides ? 'Left side first. ' : ''}${st.cues[0]}`, n);
+      beep(520, .12, .12);
+    } else if (ph.type === 'switch') { hush(); say('Switch sides.', n); beep(660, .18); buzz([90, 60, 90]); }
+    else if (ph.type === 'hold') {
+      beep(ph.side === 'R' ? 880 : 784, .22); buzz(120);
+      if (ph.side !== 'R') { if (st.kind === 'roller') say('Roll slowly.', n); else if (st.kind === 'dynamic') say('Begin. Nice and easy.', n); else if (st.kind === 'static' && !n) say('Hold, and breathe.', n); }
+    }
+  },
+  tick() {
+    const s = this.s; if (!s || s.paused) return;
+    const now = Date.now(), ph = this.phase();
+    let rem = s.endsAt - now;
+    if (rem <= 0) {
+      const lag = -rem;
+      if (ph.type === 'hold') { const it = s.session.items[ph.i]; if (!it.sides || ph.side === 'R') it.done = true; }
+      if (s.pi < s.phases.length - 1) { this.go(s.pi + 1, lag > 1500); return; }
+      this.finish(); return;
+    }
+    const sec = Math.ceil(rem / 1000);
+    if (sec !== s.lastSec) {
+      s.lastSec = sec;
+      if (sec <= 3 && sec >= 1 && (ph.type === 'hold' || ph.type === 'switch' || (ph.type === 'setup' && ph.secs >= 7))) beep(ph.type === 'hold' ? 600 : 500, .07, .1);
+      if (ph.type === 'hold' && !s.said10 && sec === 10 && ph.secs >= 40 && !s.night && ST[s.session.items[ph.i].id].kind === 'static') { s.said10 = true; say('Ten seconds.', s.night); }
+    }
+    const it = s.session.items[ph.i];
+    if (ph.type === 'hold' && ST[it.id].kind === 'breath') {
+      const el = ph.secs * 1000 - rem, cyc = Math.floor(el / 10000), inPhase = (el % 10000) < 4000, step = cyc * 2 + (inPhase ? 0 : 1);
+      if (step !== s.breathStep) { s.breathStep = step; if (cyc < 3) say(inPhase ? 'Breathe in' : 'and out', true); const b = $('#ring-sub'); if (b) b.textContent = inPhase ? 'Breathe in' : 'Breathe out'; }
+    }
+    this.paint(rem);
+  },
+  paint(rem) {
+    const s = this.s, ph = this.phase();
+    const num = $('#ring-num'), prog = $('#ring-prog'), left = $('#pl-left');
+    if (num) num.textContent = Math.max(0, Math.ceil(rem / 1000));
+    if (prog) prog.style.strokeDashoffset = (RING_C * (1 - Math.max(0, rem) / (ph.secs * 1000))).toFixed(1);
+    if (left) { let t = rem; for (let k = s.pi + 1; k < s.phases.length; k++) t += s.phases[k].secs * 1000; left.textContent = `${mmss(t)} left`; }
+  },
+  render() {
+    const s = this.s, ph = this.phase(), it = s.session.items[ph.i], st = ST[it.id], items = s.session.items;
+    const nextIt = items[ph.i + 1];
+    const label = ph.type === 'setup' ? 'Get into position' : ph.type === 'switch' ? 'Switch sides' : ph.side === 'L' ? 'Left side' : ph.side === 'R' ? 'Right side' : st.kind === 'roller' ? 'Roll' : st.kind === 'dynamic' ? 'Move' : st.kind === 'breath' ? 'Breathe' : 'Hold';
+    const sub = ph.type === 'setup' ? (it.sides ? 'Left side first' : holdTxt(it)) : ph.type === 'switch' ? 'Right side next' : st.kind === 'breath' ? 'Breathe in' : '';
+    const ready = ph.type !== 'hold';
+    const cueIdx = ph.type === 'setup' ? 0 : ph.type === 'switch' ? 0 : (ph.side === 'R' ? 2 : 1);
+    const breathing = ph.type === 'hold' && (st.kind === 'breath' || s.night);
+    const pl = $('#player');
+    pl.classList.toggle('night', s.night);
+    pl.innerHTML = `<div class="pl-in">
+      <div class="pl-top"><button class="icon-btn" data-act="pl-close" aria-label="End session">${ICON.close}</button>
+        <div class="pl-title"><b>${esc(s.session.title)}</b><span id="pl-left">${mmss(0)} left</span></div>
+        <button class="btn sm" data-act="pl-end">Finish</button></div>
+      <div class="pl-prog">${items.map((x, i) => `<i class="${x.done ? 'd' : i === ph.i ? 'c' : ''}"></i>`).join('')}</div>
+      <p class="pl-eyebrow">Stretch ${ph.i + 1} of ${items.length}${st.areas.length ? ' · ' + esc(st.areas.map(a => AREAS[a]).join(', ')) : ''}</p>
+      <h2 class="pl-name">${esc(st.name)}</h2>
+      <div class="ring-wrap ${ready ? 'ready' : ''} ${breathing ? 'breathing' : ''}"><svg viewBox="0 0 240 240" aria-hidden="true"><circle class="ring-breath" cx="120" cy="120" r="96"/><circle class="ring-track" cx="120" cy="120" r="104"/><circle class="ring-prog" id="ring-prog" cx="120" cy="120" r="104" stroke-dasharray="${RING_C.toFixed(1)}" stroke-dashoffset="0"/></svg>
+        <div class="ring-center"><span class="ring-num" id="ring-num">${ph.secs}</span><span class="ring-lbl">${label}</span><span class="ring-sub" id="ring-sub">${esc(sub)}</span></div></div>
+      <p class="pl-cue">${esc(st.cues[cueIdx])}</p>
+      <div class="pl-more"><button class="link-btn" data-act="pl-tips">${state.open.plTips ? 'Hide tips' : 'All tips for this stretch'}</button></div>
+      ${state.open.plTips ? `<div style="margin-top:8px"><ol class="cues">${st.cues.map(c => `<li>${esc(c)}</li>`).join('')}</ol><dl class="kv" style="margin-top:10px"><dt>Feel it in</dt><dd>${esc(st.feel)}</dd><dt>Careful</dt><dd>${esc(st.caution)}</dd><dt>Easier</dt><dd>${esc(st.easier)}</dd></dl></div>` : ''}
+      <p class="pl-next">${nextIt ? `Up next: ${esc(ST[nextIt.id].name)}` : 'Last one'}</p>
+      <div class="pl-controls"><div class="side"><button class="round" data-act="pl-back" aria-label="Restart this stretch or go back">${ICON.back}</button></div>
+        <button class="big-play" data-act="pl-toggle" aria-label="${s.paused ? 'Resume' : 'Pause'}">${s.paused ? ICON.play : ICON.pause}</button>
+        <div class="side r"><button class="round" data-act="pl-add" aria-label="Add 10 seconds" ${ph.type === 'hold' ? '' : 'disabled'}>+10</button><button class="round" data-act="pl-skip" aria-label="Skip to the next stretch">${ICON.skip}</button></div></div>
+    </div>`;
+    this.paint(s.paused ? s.remaining : s.endsAt - Date.now());
+  },
+  toggle() {
+    const s = this.s; if (!s) return;
+    unlockAudio();
+    if (s.paused) { s.paused = false; s.endsAt = Date.now() + s.remaining; s.resumedAt = Date.now(); if (state.profile.wake) requestWake(); }
+    else { s.paused = true; s.remaining = Math.max(0, s.endsAt - Date.now()); s.activeMs += Date.now() - s.resumedAt; hush(); }
+    this.render();
+  },
+  skip() {
+    const s = this.s, cur = this.phase().i;
+    const nx = s.phases.findIndex((p, k) => k > s.pi && p.type === 'setup' && p.i > cur);
+    if (nx < 0) { this.finish(); return; }
+    this.resumeIfPaused(); this.go(nx, false);
+  },
+  back() {
+    const s = this.s, ph = this.phase();
+    const start = s.phases.findIndex(p => p.i === ph.i && p.type === 'setup');
+    const elapsed = ph.secs * 1000 - (s.paused ? s.remaining : s.endsAt - Date.now());
+    let target = start;
+    if (s.pi === start && elapsed < 2500 && ph.i > 0) target = s.phases.findIndex(p => p.i === ph.i - 1 && p.type === 'setup');
+    const it = s.session.items[s.phases[target].i]; it.done = false;
+    this.resumeIfPaused(); this.go(target, false);
+  },
+  add10() { const s = this.s; if (!s || this.phase().type !== 'hold') return; if (s.paused) s.remaining += 10000; else s.endsAt += 10000; toast('+10 seconds'); },
+  resumeIfPaused() { const s = this.s; if (s.paused) { s.paused = false; s.resumedAt = Date.now(); } },
+  finish() {
+    const s = this.s; if (!s) return;
+    if (!s.paused) { s.activeMs += Date.now() - s.resumedAt; s.paused = true; s.remaining = 0; }
+    clearInterval(this.iv); this.iv = null;
+    if (s.session.items.every(i => i.done)) { hush(); say('All done. Nice work.', s.night); beep(784, .2); setTimeout(() => beep(1046, .3), 220); }
+    openFinish();
+  },
+  close(saved) {
+    clearInterval(this.iv); this.iv = null; hush(); releaseWake();
+    this.s = null; state.open.plTips = false;
+    $('#player').hidden = true; $('#player').innerHTML = ''; document.body.style.overflow = '';
+    if (!saved) render();
+  }
+};
+function startSession(items, meta) {
+  const ci = state.ci;
+  const session = { id: uid(), title: meta.title, purpose: meta.purpose, activity: meta.activity ?? null, spots: meta.spots || [], mins: meta.mins || 0, before: meta.before ?? null, items: items.map(it => ({ ...it, done: false })) };
+  closeSheet();
+  P.start(session);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && P.s) { if (state.profile.wake && !P.s.paused) requestWake(); P.tick(); }
+});
+
+/* ---------------- toast, backup, export ---------------- */
+let toastT = null;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2800); }
+async function saveFile(name, text, mime) {
+  const file = new File([text], name, { type: mime });
+  if (navigator.canShare && navigator.share) {
+    let ok = false; try { ok = navigator.canShare({ files: [file] }); } catch (e) {}
+    if (ok) { try { await navigator.share({ files: [file], title: name }); return 'shared'; } catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; } }
+  }
+  const url = URL.createObjectURL(file), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return 'downloaded';
+}
+async function backupNow() {
+  if (!state.sessions.length) { toast('Nothing to back up yet'); return; }
+  const r = await saveFile(`limber-backup-${today()}.json`, JSON.stringify({ app: 'limber', format: 1, exportedAt: new Date().toISOString(), profile: state.profile, sessions: state.sessions }), 'application/json');
+  if (r === 'cancelled') return;
+  state.profile.lastBackup = today(); state.profile.backupSnooze = null; Store.saveProfile();
+  render(); if (sheetCtx && sheetCtx.type === 'settings') openSettings();
+  toast(r === 'shared' ? 'Backup saved' : 'Backup downloaded');
+}
+function readBackup(file) {
+  const bad = () => toast('That file isn’t a Limber backup.');
+  const reader = new FileReader();
+  reader.onerror = bad;
+  reader.onload = () => {
+    let data; try { data = JSON.parse(reader.result); } catch (e) { bad(); return; }
+    if (!data || data.app !== 'limber' || !Array.isArray(data.sessions)) { bad(); return; }
+    const sessions = data.sessions.filter(x => x && typeof x.id === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date || '') && Array.isArray(x.items) && x.items.every(i => i && typeof i.id === 'string'));
+    const here = new Set(state.sessions.map(x => x.id)), fresh = sessions.filter(x => !here.has(x.id)).length;
+    const when = data.exportedAt ? new Date(data.exportedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'an unknown date';
+    sheetCtx = { type: 'restore', data: { profile: data.profile || {}, sessions } };
+    openSheet(`<div class="sheet-head"><div><p class="eyebrow">Restore</p><h2>Backup found</h2></div>${closeBtn}</div>
+      <p style="margin-bottom:8px">This backup is from ${esc(when)} and has <b>${sessions.length}</b> session${sessions.length === 1 ? '' : 's'}. This phone has <b>${state.sessions.length}</b>.</p>
+      <p class="small muted" style="margin-bottom:18px">Merge adds the ${fresh} session${fresh === 1 ? '' : 's'} you don’t have here and keeps everything else. Replace swaps this phone’s log and settings for the backup.</p>
+      <div class="row" style="flex-wrap:nowrap"><button class="btn" style="flex:1" data-act="restore-replace">Replace</button><button class="btn primary" style="flex:1" data-act="restore-merge">Merge</button></div>`);
+  };
+  reader.readAsText(file);
+}
+function applyRestore(mode) {
+  const d = sheetCtx && sheetCtx.data; if (!d) return;
+  if (mode === 'replace') { Store.replace(d.sessions, { ...d.profile, welcomed: true }); toast(`Restored ${d.sessions.length} sessions`); }
+  else {
+    const map = new Map(state.sessions.map(x => [x.id, x])); let added = 0;
+    for (const x of d.sessions) if (!map.has(x.id)) { map.set(x.id, x); added++; }
+    Store.replace([...map.values()], state.sessions.length ? { ...state.profile, welcomed: true } : { ...d.profile, welcomed: true });
+    toast(added ? `Added ${added} session${added === 1 ? '' : 's'}` : 'Everything in that backup is already here');
+  }
+  closeSheet(); render();
+}
+async function exportCsv() {
+  if (!state.sessions.length) { toast('Nothing to export yet'); return; }
+  const rows = [['date', 'session', 'activity', 'minutes', 'tight_before', 'tight_after', 'stretch', 'hold_seconds', 'each_side', 'done', 'notes']];
+  for (const s of sortSessions(state.sessions).reverse()) (s.items || []).forEach((i, k) => rows.push([s.date, s.title, s.activity || '', s.minutes || '', s.before ? TIGHT[s.before] : '', s.after ? TIGHT[s.after] : '', ST[i.id] ? ST[i.id].name : i.id, i.hold, i.sides ? 'yes' : 'no', i.done ? 'yes' : 'no', k === 0 ? (s.notes || '') : '']));
+  const csv = rows.map(r => r.map(v => { const t = String(v); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }).join(',')).join('\n');
+  const r = await saveFile(`limber-log-${today()}.csv`, csv, 'text/csv');
+  if (r !== 'cancelled') toast('Exported');
+}
+
+/* ---------------- events ---------------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, ci = state.ci, p = state.profile;
+  const reCi = () => { ci.seed = 1; saveCi(); render(); };
+  switch (act) {
+    case 'tab': state.tab = el.dataset.tab; LS.set('lm.tab', state.tab); closeSheet(); render(); window.scrollTo(0, 0); break;
+    case 'settings': openSettings(); break;
+    case 'sheet-close': if (sheetCtx && sheetCtx.type === 'finish' && !sheetCtx.isEdit) { readFinish(); } closeSheet(); break;
+    case 'welcome-ok': p.welcomed = true; Store.saveProfile(); render(); break;
+    case 'install-hide': LS.set('lm.installHint', 'hide'); render(); break;
+    case 'toggle': state.open[el.dataset.k] = !state.open[el.dataset.k]; state.confirmDel = null; render(); break;
+    case 'ci-purpose': ci.purpose = el.dataset.v; if (ci.purpose === 'after' && (!ci.activity || ci.activity === 'rest')) ci.activity = p.focus === 'ride' ? 'ride' : 'run'; reCi(); break;
+    case 'ci-act': ci.activity = ci.activity === el.dataset.v ? null : el.dataset.v; if (ci.purpose === 'after' && ci.activity === 'rest') ci.purpose = 'daily'; reCi(); break;
+    case 'ci-spot': { const k = el.dataset.v; ci.spots = ci.spots.includes(k) ? ci.spots.filter(x => x !== k) : [...ci.spots, k]; reCi(); break; }
+    case 'ci-before': { const v = Number(el.dataset.v); ci.before = ci.before === v ? null : v; saveCi(); render(); break; }
+    case 'ci-mins': ci.mins = Number(el.dataset.v); reCi(); break;
+    case 'shuffle': ci.seed += 1; saveCi(); render(); break;
+    case 'start': { const plan = buildSession(ci); startSession(plan.items, { title: purposeTitle(ci), purpose: ci.purpose, activity: ci.activity, spots: ci.spots, mins: ci.mins, before: ci.before }); break; }
+    case 'try': { const s = ST[el.dataset.id]; startSession([{ id: el.dataset.id, hold: holdFor(s, 'daily'), sides: !!s.sides }], { title: s.name, purpose: 'single' }); break; }
+    case 'fav': { const id = el.dataset.id; p.favs = p.favs.includes(id) ? p.favs.filter(x => x !== id) : [...p.favs, id]; Store.saveProfile(); render(); break; }
+    case 'lib-tag': state.lib.tag = el.dataset.tag; render(); break;
+    case 'cell': $('#ro-heat').textContent = el.dataset.tip; break;
+    case 'bf': $('#ro-bf').textContent = el.dataset.tip; break;
+    case 'export': exportCsv(); break;
+    case 'backup': backupNow(); break;
+    case 'backup-later': p.backupSnooze = addDays(today(), 7); Store.saveProfile(); render(); break;
+    case 'restore-pick': { const f = $('#restore-file'); f.value = ''; f.click(); break; }
+    case 'restore-merge': applyRestore('merge'); break;
+    case 'restore-replace': applyRestore('replace'); break;
+    case 'edit-log': { const s = state.sessions.find(x => x.id === el.dataset.id); if (s) openFinish(s); break; }
+    case 'del-ask': state.confirmDel = el.dataset.id; render(); break;
+    case 'del-no': state.confirmDel = null; render(); break;
+    case 'del-yes': Store.deleteSession(el.dataset.id); state.confirmDel = null; render(); toast('Session deleted'); break;
+    case 'wipe-ask': $('#wipe-confirm').innerHTML = `<div class="banner warm"><p class="small">Erase all ${state.sessions.length} sessions? This can’t be undone.</p><div class="row"><button class="btn sm" data-act="wipe-no">Keep</button><button class="btn sm danger" data-act="wipe-yes">Erase</button></div></div>`; break;
+    case 'wipe-no': $('#wipe-confirm').innerHTML = ''; break;
+    case 'wipe-yes': Store.replace([], p); closeSheet(); render(); toast('All sessions erased'); break;
+    case 'set-focus': p.focus = el.dataset.v; Store.saveProfile(); openSettings(); render(); break;
+    case 'set-spot': { const k = el.dataset.v; p.spots = p.spots.includes(k) ? p.spots.filter(x => x !== k) : [...p.spots, k]; Store.saveProfile(); openSettings(); break; }
+    case 'set-hold': p.hold = Number(el.dataset.v); Store.saveProfile(); openSettings(); render(); break;
+    case 'set-roller': p.roller = !p.roller; Store.saveProfile(); openSettings(); render(); break;
+    case 'set-voice': p.voice = !p.voice; Store.saveProfile(); openSettings(); break;
+    case 'set-slow': p.slowVoice = !p.slowVoice; Store.saveProfile(); openSettings(); break;
+    case 'set-sound': p.sound = !p.sound; Store.saveProfile(); openSettings(); break;
+    case 'set-wake': p.wake = !p.wake; Store.saveProfile(); openSettings(); break;
+    case 'test-voice': unlockAudio(); hush(); if (!p.voice) toast('Spoken cues are off'); else say('Half-kneeling hip flexor stretch. Left side first.'); beep(784, .2); break;
+    case 'f-before': case 'f-after': { readFinish(); const k = act === 'f-before' ? 'before' : 'after', v = Number(el.dataset.v); sheetCtx.f[k] = sheetCtx.f[k] === v ? null : v; renderFinish(); break; }
+    case 'f-save': saveFinish(); break;
+    case 'f-discard': closeSheet(); P.close(false); toast('Not logged'); break;
+    case 'pl-toggle': P.toggle(); break;
+    case 'pl-skip': P.skip(); break;
+    case 'pl-back': P.back(); break;
+    case 'pl-add': P.add10(); break;
+    case 'pl-end': case 'pl-close': if (P.s) { if (!P.s.paused) P.toggle(); if (!P.s.session.items.some(i => i.done)) { P.close(false); toast('Session ended'); } else openFinish(); } break;
+    case 'pl-tips': state.open.plTips = !state.open.plTips; P.render(); break;
+    case 'update-app': if (swReg && swReg.waiting) { swUpdating = true; swReg.waiting.postMessage('skipWaiting'); } else location.reload(); break;
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'lib-q') { state.lib.q = e.target.value; const tmp = document.createElement('div'); tmp.innerHTML = viewLibrary(); $('#lib-list').replaceWith(tmp.querySelector('#lib-list')); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'restore-file') { const f = e.target.files && e.target.files[0]; if (f) readBackup(f); } });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet();
+  else if (e.key === ' ' && P.s && $('#sheet').hidden && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); P.toggle(); }
+});
+window.addEventListener('focus', () => { if (state.ci.date !== today()) { state.ci = defaultCi(); saveCi(); render(); } });
+
+/* ---------------- boot ---------------- */
+let swReg = null, swUpdating = false;
+render();
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      swReg = reg;
+      const ready = () => { if (reg.waiting && navigator.serviceWorker.controller) $('#update-bar').hidden = false; };
+      ready();
+      reg.addEventListener('updatefound', () => { const w = reg.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') ready(); }); });
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (swUpdating) location.reload(); });
+  });
+}
+</script>
+</body>
+</html>
