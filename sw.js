@@ -1,7 +1,7 @@
 // Limber service worker: keeps the app working offline.
 // Bump VERSION whenever any app file changes so phones pick up the update.
 // Other apps share this github.io origin, so this worker only ever touches caches named limber-*.
-const VERSION = 'limber-v1';
+const VERSION = 'limber-v2';
 const FONTS = 'limber-fonts';
 const SHELL = [
   './',
